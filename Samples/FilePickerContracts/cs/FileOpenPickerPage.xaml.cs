@@ -28,6 +28,9 @@ namespace SDKTemplate
     {
         public const string FEATURE_NAME = "File Open Picker Page";
 
+        public event System.EventHandler ScenarioLoaded;
+        public event EventHandler<FileOpenPickerPageSizeChangedEventArgs> FileOpenPickerPageResized;
+
         public Windows.ApplicationModel.Activation.LaunchActivatedEventArgs LaunchArgs;
 
         public static FileOpenPickerPage Current;
@@ -67,13 +70,22 @@ namespace SDKTemplate
             HiddenFrame.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             LayoutRoot.Children.Add(HiddenFrame);
 
-            // Populate the sample title from the constant in this file.
+            // Populate the sample title from the constant in the GlobalVariables.cs file.
             SetFeatureName(FEATURE_NAME);
+
+            Scenarios.SelectionChanged += Scenarios_SelectionChanged;
+            SizeChanged += FileOpenPickerPage_SizeChanged;
         }
 
         void FileOpenPickerPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             InvalidateSize();
+            if (FileOpenPickerPageResized != null)
+            {
+                FileOpenPickerPageSizeChangedEventArgs args = new FileOpenPickerPageSizeChangedEventArgs();
+                args.Width = this.ActualWidth;
+                FileOpenPickerPageResized(this, args);
+            }
         }
 
         /// <summary>
@@ -208,6 +220,11 @@ namespace SDKTemplate
                 // Populate the input and output sections with the newly loaded content.
                 InputSection.Content = input;
                 OutputSection.Content = output;
+
+                if (ScenarioLoaded != null)
+                {
+                    ScenarioLoaded(this, new EventArgs());
+                }
             }
             else
             {
@@ -219,7 +236,7 @@ namespace SDKTemplate
 
         }
 
-        void OnScenarioSelectionChanged()
+        void Scenarios_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (Scenarios.SelectedItem != null)
             {
@@ -265,6 +282,17 @@ namespace SDKTemplate
         private void SetFeatureName(string str)
         {
             FeatureName.Text = str;
+        }
+    }
+
+    public class FileOpenPickerPageSizeChangedEventArgs : EventArgs
+    {
+        private double width;
+
+        public double Width
+        {
+            get { return width; }
+            set { width = value; }
         }
     }
 }
